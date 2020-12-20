@@ -1,13 +1,59 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8">
     <title>Meet Manager</title>
-    <link rel="stylesheet" href="index.css">
-  </head>
-  <body>
-    <div id='class-container'></div>
+    <link rel="stylesheet" href="light.css">
+    <link id="darktheme" rel="stylesheet" href="dark.css" disabled>
+</head>
 
+<body>
+    <div id='cog' style='display:inline-block;'>Settings</div> |
+    <div id='time' style='display:inline-block;'></div>
+
+    <div id='home-pane'>
+
+        <div id='dayswitch'>
+            <div style='position: absolute; right:45px'>A</div>
+            <div style='position: absolute; left:45px'>B</div>
+            <label class="switch">
+                <input id="dayswitchbox" type="checkbox">
+                <div class="slider"></div>
+            </label>
+        </div>
+
+
+        <div id='big-button'>
+            <div id='big-button-text'>there is no class right now</div>
+            <img id='big-button-img' src='laptop.png' draggable="false" style="display: none;" />
+        </div>
+
+        <div id='class-container'></div>
+
+    </div>
+
+    <div id='settings-pane'>
+        <div id='centersetting'>
+            <table id='basic-settings-table'>
+                <tr>
+                    <td>Dark Theme</td>
+                    <td><input type="checkbox" id="darkthemebox"></td>
+                </tr>
+            </table>
+            <br />
+            <table id='period-times-parent'></table>
+            <button style="width: 32%; display: inline-block;" onclick="addPeriod()">
+                Add<br />Period</button>
+            <button style="width: 32%; display: inline-block;" onclick="savPeriod(true)">Save
+                Changes</button>
+            <button style="width: 32%; display: inline-block;" onclick="resPeriod()">Reset to
+                Default</button>
+        </div>
+    </div>
+
+    <script src="layout.js"></script>
     <script src="script.js"></script>
-  </body>
+</body>
+
 </html>
