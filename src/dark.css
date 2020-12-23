@@ -3,3 +3,7 @@ body {
   color: #fff!important;
 }
 .class { color: #000!important; }
+.link:hover {
+    color: #fff!important;
+    cursor: pointer;
+}

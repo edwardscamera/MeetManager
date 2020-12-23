@@ -34,21 +34,53 @@
     </div>
 
     <div id='settings-pane'>
+        <a class="link" style="position: absolute; left: 5px; bottom: 5px;"
+            onclick="electron.shell.openExternal('http:\/\/edwardscamera.com')">created by edwardscamera</a>
+        <div class="link" style="position: absolute; right: 5px; bottom: 5px;"
+            onclick="electron.shell.openExternal('https:\/\/github.com/edwardscamera/minecraftservershell')">
+            view on github</div>
         <div id='centersetting'>
             <table id='basic-settings-table'>
                 <tr>
                     <td>Dark Theme</td>
                     <td><input type="checkbox" id="darkthemebox"></td>
                 </tr>
+                <tr>
+                    <td>Import Settings...</td>
+                    <td><button id="importsettingsbutton" style="width: 55px;"
+                            onclick="exportSettings()">Export</button></td>
+                </tr>
+                <tr>
+                    <td>Import Settings...</td>
+                    <td>
+                        <input id="importsettingsfile" type="file">
+                        <button id="importsettingsbutton" style="width: 55px;"
+                            onclick="importSettings()">Import</button>
+                    </td>
+                </tr>
             </table>
             <br />
+
             <table id='period-times-parent'></table>
             <button style="width: 32%; display: inline-block;" onclick="addPeriod()">
-                Add<br />Period</button>
+                Add Period</button>
             <button style="width: 32%; display: inline-block;" onclick="savPeriod(true)">Save
                 Changes</button>
             <button style="width: 32%; display: inline-block;" onclick="resPeriod()">Reset to
                 Default</button>
+            <br />
+            <br />
+
+            <table id='class-editor'></table>
+            <table id='period-times-parent'></table>
+            <button style="width: 32%; display: inline-block;" onclick="addClass()">
+                Add Class</button>
+            <button style="width: 32%; display: inline-block;" onclick="savClass(true)">Save
+                Changes</button>
+            <button style="width: 32%; display: inline-block;" onclick="resClass()">Reset to
+                Default</button>
+
+            <h1 id="initbutton" style="display: none;">Go to class!</h1>
         </div>
     </div>
 

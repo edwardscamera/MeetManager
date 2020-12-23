@@ -29,9 +29,12 @@ body {
   transition: .3s ease-out;
 
   transform:rotateX(180deg);
+
+  width: 80px;
+  height: 80px;
 }
 .class:hover { transform: scale(1.1) translateY(5px) rotateX(180deg); }
-.class img { width: 80px; }
+.class img { width: 60px; height: 60px; }
 
 #big-button {
     position: absolute;
@@ -86,7 +89,7 @@ input[type=checkbox]:checked + .slider:before { transform: translateX(20px); }
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 300px;
+    width: 800px;
     transform: translate(-50%, -50%);
 }
 
@@ -95,19 +98,10 @@ input[type=checkbox]:checked + .slider:before { transform: translateX(20px); }
 #basic-settings-table tr td:nth-child(2) { float: right; }
 
 #period-times-parent td { width: 500px; }
-
-
-/*
-#period-times-parent th:nth-child(1), #period-times-parent td:nth-child(1) {
-    width: 50%;
-}
-#period-times-parent th:nth-child(2), #period-times-parent td:nth-child(2) {
-    width: 25%;
-}
-#period-times-parent th:nth-child(3), #period-times-parent td:nth-child(3) {
-    width: 25%;
-}
-*/
+#period-times-parent input { width: 95%; }
+#class-editor td { width: 1500px; }
+.class-pic { width: 50px; transition: ease-out .3s; }
+.class-pic:hover { cursor: pointer; transform: scale(1.1); }
 
 ::-webkit-scrollbar {
   width: 6px;
@@ -122,3 +116,29 @@ input[type=checkbox]:checked + .slider:before { transform: translateX(20px); }
 ::-webkit-scrollbar-thumb:active { background: #000; }
 ::-webkit-scrollbar-track { background: #e1e1e1; }
 ::-webkit-scrollbar-corner { background: transparent; }
+
+#initbutton {
+    text-align: center;
+    font-size: 80px;
+    margin-bottom: 0px;
+    transition: .3s ease-out;
+}
+#initbutton:hover {
+    transform: scale(1.3);
+    cursor: pointer;
+}
+button:hover {
+    cursor: pointer;
+}
+.delete:hover { cursor: pointer; }
+
+.link {
+    color: #58a6ff;
+    cursor: pointer;
+    transition: .3s ease-in-out;
+}
+
+.link:hover {
+    color: #000;
+    cursor: pointer;
+}

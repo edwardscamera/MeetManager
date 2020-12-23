@@ -1,9 +1,10 @@
+const { ipcMain } = require('electron');
 const electron = require('electron');
 const fs = require('fs');
 
 // SET DEFAULTS
 const default_settings = {
-    darktheme: false,
+    darktheme: true,
     period_times: [
         {
             'start': '07:00',
@@ -34,60 +35,47 @@ const default_settings = {
             'end': '14:13',
         },
     ],
+    classes: [
+        {
+            "label": "Algebra",
+            "url": "https://meet.google.com/",
+            "period": 1,
+            "days": ["a", "b"],
+        }
+    ]
 };
-const classes = [
-    {
-        'label': 'AP Seminar',
-        'url': 'https://meet.google.com/yiv-dhek-jmp',
-        'period': 1,
-        'days': ['a', 'b'],
-    }, {
-        'label': 'Algebra II',
-        'url': 'https://meet.google.com/',
-        'period': 2,
-        'days': ['a', 'b'],
-    }, {
-        'label': 'AP CSP',
-        'url': 'https://meet.google.com/',
-        'period': 3,
-        'days': ['a', 'b'],
-    }, {
-        'label': 'Orchestra',
-        'url': 'https://meet.google.com/gue-xnoh-zua',
-        'period': 4,
-        'days': ['a', 'b'],
-    }, {
-        'label': 'AP World',
-        'url': 'https://meet.google.com/',
-        'period': 5,
-        'days': ['a', 'b'],
-    }, {
-        'label': 'Spanish III',
-        'url': 'https://meet.google.com/',
-        'period': 6,
-        'days': ['a', 'b'],
-    },
-    {
-        'label': 'Gym',
-        'url': 'https://meet.google.com/',
-        'period': 8,
-        'days': ['a'],
-    },
-    {
-        'label': 'Chemistry',
-        'url': 'https://meet.google.com/',
-        'period': 8,
-        'days': ['b'],
-    },
-    {
-        'label': 'Chemistry',
-        'url': 'https://meet.google.com/',
-        'period': 9,
-        'days': ['a', 'b'],
-    },
-];
+
+const showPane = pane => {
+    document.querySelector('#home-pane').style.display = (pane === 'home' ? 'block' : 'none');
+    document.querySelector('#settings-pane').style.display = (pane === 'settings' ? 'block' : 'none');
+};
 
 // UPDATE SETTINGS TAB AND FEATURES
+if (!fs.existsSync('settings.json')) {
+    fs.writeFileSync('settings.json', JSON.stringify(default_settings));
+
+    document.querySelector('#cog').style.display = 'none';
+    document.querySelector('#initbutton').style.display = 'block';
+    showPane('settings');
+} else { showPane('home'); }
+document.querySelector('#initbutton').onclick = () => {
+    savClass();
+    savPeriod();
+    showPane('day');
+
+    document.querySelector('#initbutton').style.display = 'none';
+    document.querySelector('#cog').innerText = 'Settings';
+};
+let settings = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
+const generateOptions = per => {
+    let periodSelect = [];
+    for (let i = 0; i < settings.period_times.length; i++) periodSelect.push({
+        tag: 'option',
+        content: `Period ${i + 1}`,
+        selected: per === i + 1 ? "selected" : "",
+    });
+    return (periodSelect);
+};
 const updateSettings = () => {
     settings = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
 
@@ -160,22 +148,171 @@ const updateSettings = () => {
                 style: { color: '#cc0000' },
                 onmouseenter: function () { this.style.color = '#880000'; },
                 onmouseleave: function () { this.style.color = '#cc0000'; },
+                class: ['delete'],
                 onclick: () => {
-                    settings.period_times.splice(settings.period_times.indexOf(time), 1);
-                    fs.writeFileSync('settings.json', JSON.stringify(settings));
-                    updateSettings();
+                    electron.remote.dialog.showMessageBox({
+                        buttons: ["Yes", "No"],
+                        message: "Do you really want to delete this period?",
+                        title: "Meet Manager",
+                    }).then(value => {
+                        if (value.response === 0) {
+                            settings.classes.forEach(c => {
+                                if (c.period === settings.period_times.indexOf(time) + 1) settings.classes[settings.classes.indexOf(c)].period = 1;
+                            });
+                            settings.period_times.splice(settings.period_times.indexOf(time), 1);
+
+                            fs.writeFileSync('settings.json', JSON.stringify(settings));
+                            updateSettings();
+                        }
+                    });
                 }
             }
         ],
     }));
 
     createLayout(layout, periodtimetable);
-};
 
-// CREATE SETTINGS.JSON
-if (!fs.existsSync('settings.json')) fs.writeFileSync('settings.json', JSON.stringify(default_settings));
-let settings = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
-let period_times = settings.period_times;
+    layout = [
+        {
+            tag: 'tr',
+            children: [
+                {
+                    tag: 'td',
+                    content: 'Class',
+                    style: { fontWeight: 'bold', },
+                },
+                {
+                    tag: 'td',
+                    content: 'Period',
+                    style: { fontWeight: 'bold', },
+                },
+                {
+                    tag: 'td',
+                    content: 'A Day',
+                    style: { fontWeight: 'bold', },
+                },
+                {
+                    tag: 'td',
+                    content: 'B Day',
+                    style: { fontWeight: 'bold', },
+                },
+                {
+                    tag: 'td',
+                    content: 'Link',
+                    style: { fontWeight: 'bold', },
+                },
+                {
+                    tag: 'td',
+                    content: 'Icon',
+                    style: { fontWeight: 'bold', },
+                }
+            ],
+        },
+    ];
+    classEditor = document.querySelector('#class-editor');
+    while (classEditor.children.length > 0) classEditor.children[0].remove();
+    if (settings.classes.length === 0) {
+        layout.push({
+            tag: 'span',
+            content: 'There are no classes!',
+        });
+    } else {
+        settings.classes.forEach(clas => {
+            layout.push({
+                tag: 'tr',
+                children: [
+                    {
+                        tag: 'td',
+                        children: [{
+                            tag: 'input',
+                            placeholder: 'Class Name',
+                            value: clas.label,
+                        }],
+                    },
+                    {
+                        tag: 'td',
+                        children: [{
+                            tag: 'select',
+                            children: generateOptions(clas.period),
+                        }],
+                    },
+                    {
+                        tag: 'td',
+                        children: [{
+                            tag: 'input',
+                            type: 'checkbox',
+                            checked: clas.days.includes('a'),
+                        }]
+                    },
+                    {
+                        tag: 'td',
+                        children: [{
+                            tag: 'input',
+                            type: 'checkbox',
+                            checked: clas.days.includes('b'),
+                        }]
+                    },
+                    {
+                        tag: 'td',
+                        children: [{
+                            tag: 'input',
+                            placeholder: 'Meeting Link',
+                            value: clas.url,
+                        }]
+                    },
+                    {
+                        tag: 'td',
+                        children: [{
+                            tag: 'img',
+                            src: clas.img ? clas.img : "laptop.png",
+                            class: ["class-pic"],
+                            onclick: () => {
+                                let files = electron.remote.dialog.showOpenDialogSync({ properties: ["openFile"] });
+
+                                if (!fs.existsSync('./img/')) fs.mkdirSync('./img/');
+                                let onlyFileName = files[0].split('\\');
+                                onlyFileName = onlyFileName[onlyFileName.length - 1];
+                                fs.copyFileSync(files[0], `./img/${onlyFileName}`);
+
+                                settings.classes[settings.classes.indexOf(clas)].img = files[0];
+                                fs.writeFileSync('settings.json', JSON.stringify(settings));
+                                updateSettings();
+                            },
+                            oncontextmenu: () => {
+                                settings.classes[settings.classes.indexOf(clas)].img = null;
+                                fs.writeFileSync('settings.json', JSON.stringify(settings));
+                                updateSettings();
+                            },
+                        }]
+                    },
+                    {
+                        tag: 'span',
+                        content: '✖',
+                        style: { color: '#cc0000' },
+                        onmouseenter: function () { this.style.color = '#880000'; },
+                        onmouseleave: function () { this.style.color = '#cc0000'; },
+                        class: ['delete'],
+                        onclick: () => {
+                            electron.remote.dialog.showMessageBox({
+                                buttons: ["Yes", "No"],
+                                message: "Do you really want to delete this class?",
+                                title: "Meet Manager",
+                            }).then(value => {
+                                if (value.response === 0) {
+                                    settings.classes.splice(settings.classes.indexOf(clas), 1);
+
+                                    fs.writeFileSync('settings.json', JSON.stringify(settings));
+                                    updateSettings();
+                                }
+                            });
+                        }
+                    }
+                ],
+            });
+        });
+    }
+    createLayout(layout, classEditor);
+};
 
 // APPEND DEFAULT SETTINGS IF CORRUPT
 if (!fs.existsSync('settings.json')) fs.writeFileSync('settings.json', JSON.stringify(default_settings));
@@ -226,10 +363,67 @@ const savPeriod = showInfo => {
     if (showInfo) electron.remote.dialog.showMessageBoxSync({ type: "info", title: "Meet Manager", message: "Changes saved!" });
 };
 const resPeriod = () => {
-    settings.period_times = default_settings.period_times;
+    electron.remote.dialog.showMessageBox({
+        buttons: ["Yes", "No"],
+        message: "Do you really want to reset the period times?",
+        title: "Meet Manager",
+    }).then(value => {
+        if (value.response === 0) {
+            settings.period_times = default_settings.period_times;
+            fs.writeFileSync('settings.json', JSON.stringify(settings));
+            updateSettings();
+            electron.remote.dialog.showMessageBoxSync({ type: "info", title: "Meet Manager", message: "Changes saved!" });
+        }
+    });
+};
+const addClass = () => {
+    savClass();
+    settings.classes.push({
+        label: 'New Class',
+        period: 1,
+        days: ['a', 'b'],
+        url: 'https://meet.google.com/',
+    });
     fs.writeFileSync('settings.json', JSON.stringify(settings));
     updateSettings();
-    electron.remote.dialog.showMessageBoxSync({ type: "info", title: "Meet Manager", message: "Changes saved!" });
+    refreshClassBar();
+};
+const savClass = showInfo => {
+    let guipers = Array.from(document.querySelector('#class-editor').children);
+    guipers.splice(0, 1);
+    let checkDays = og => {
+        days = [];
+        if (og.children[2].children[0].checked) days.push("a");
+        if (og.children[3].children[0].checked) days.push("b");
+        return days;
+    };
+    guipers = guipers.map(og => ({
+        label: og.children[0].children[0].value,
+        period: window.parseInt(og.children[1].children[0].value.split("Period ")[1]),
+        days: checkDays(og),
+        url: og.children[4].children[0].value,
+    }));
+    settings.classes = guipers;
+    fs.writeFileSync('settings.json', JSON.stringify(settings));
+    updateSettings();
+    if (showInfo) electron.remote.dialog.showMessageBoxSync({ type: "info", title: "Meet Manager", message: "Changes saved!" });
+    refreshClassBar();
+};
+const resClass = () => {
+    electron.remote.dialog.showMessageBox({
+        buttons: ["Yes", "No"],
+        message: "Do you really want to reset your classes?",
+        title: "Meet Manager",
+    }).then(value => {
+        if (value.response === 0) {
+            settings.classes = default_settings.classes;
+            fs.writeFileSync('settings.json', JSON.stringify(settings));
+            updateSettings();
+            electron.remote.dialog.showMessageBoxSync({ type: "info", title: "Meet Manager", message: "Changes saved!" });
+            refreshClassBar();
+        }
+    });
+
 };
 
 // Returns local time as string in HH:MM format
@@ -248,7 +442,7 @@ const getTime = (format, code) => {
 // Returns class period based on time in HH:MM format and period_times
 const getPeriod = time => {
     let new_time_arg = window.parseInt(time.split(':')[0]) * 60 + window.parseInt(time.split(':')[1]);
-    let new_period_times = period_times.map(old_time => ({
+    let new_period_times = settings.period_times.map(old_time => ({
         'start': window.parseInt(old_time.start.split(':')[0]) * 60 + window.parseInt(old_time.start.split(':')[1]),
         'end': window.parseInt(old_time.end.split(':')[0]) * 60 + window.parseInt(old_time.end.split(':')[1]),
     }));
@@ -269,11 +463,12 @@ const refreshTime = () => {
 
     if (period !== -1 && ![0, 6].includes((new Date()).getDay())) {
         let final_c = null;
-        classes.forEach(c => {
+        settings.classes.forEach(c => {
             if (c.period - 1 === period && c.days.includes(document.querySelector('#dayswitchbox').checked ? 'b' : 'a')) final_c = c;
         });
         document.querySelector('#big-button-text').innerText = final_c.label;
         document.querySelector('#big-button-img').style.display = 'block';
+        document.querySelector('#big-button-img').src = final_c.img ? final_c.img : 'laptop_icon.png';
         document.querySelector('#big-button-img').onclick = () => electron.ipcRenderer.send('load-url', [final_c.url, final_c.label]);
         document.querySelector('#big-button-img').oncontextmenu = () => electron.shell.openExternal(final_c.url);
     } else {
@@ -288,7 +483,7 @@ window.setInterval(refreshTime, 1000);
 const refreshClassBar = () => {
     const container = document.querySelector('#class-container');
     while (container.children.length > 0) container.children[0].remove();
-    classes.forEach(c => {
+    settings.classes.forEach(c => {
         let day = document.querySelector('#dayswitchbox').checked ? 'b' : 'a';
 
         if (c.days.includes(day)) {
@@ -301,7 +496,7 @@ const refreshClassBar = () => {
             label.innerText = c.label;
 
             const image = document.createElement('img');
-            image.src = 'laptop.png';
+            image.src = c.img ? c.img : 'laptop_icon.png';
             image.draggable = false;
 
             subcontainer.append(image, document.createElement('br'), label);
@@ -316,8 +511,6 @@ document.querySelector('#dayswitchbox').addEventListener('change', refreshClassB
 document.querySelector('#dayswitchbox').addEventListener('change', refreshTime);
 
 const cog = document.querySelector('#cog');
-document.querySelector('#home-pane').style.display = 'block';
-document.querySelector('#settings-pane').style.display = 'none';
 cog.addEventListener('click', () => {
     if (cog.innerText === 'Settings') {
         cog.innerText = 'Back';
@@ -325,6 +518,7 @@ cog.addEventListener('click', () => {
         document.querySelector('#settings-pane').style.display = 'block';
     } else {
         cog.innerText = 'Settings';
+        refreshClassBar();
         document.querySelector('#home-pane').style.display = 'block';
         document.querySelector('#settings-pane').style.display = 'none';
     }
@@ -336,3 +530,28 @@ document.querySelector('#darkthemebox').addEventListener('change', () => {
 
     fs.writeFileSync('settings.json', JSON.stringify(settings));
 });
+
+const importSettings = () => {
+    const file = document.querySelector('#importsettingsfile');
+    if (!file.files[0].path.endsWith('.json')) {
+        electron.remote.dialog.showErrorBox('Meet Manager', 'Settings file must be a JSON file. Make sure the file extension ends in .json and try again.');
+        file.value = "";
+        return;
+    }
+    let filedat = JSON.parse(fs.readFileSync(file.files[0].path, 'utf8'));
+    if (!filedat.period_times || !filedat.classes) {
+        electron.remote.dialog.showErrorBox('Meet Manager', 'File is corrupt.');
+    } else {
+        fs.copyFileSync(file.files[0].path, 'settings.json');
+        electron.remote.dialog.showMessageBoxSync({ type: "info", title: "Meet Manager", message: "Settings file imported!" });
+    }
+    file.value = "";
+    electron.ipcRenderer.send('load-index');
+    refreshClassBar();
+    updateSettings();
+};
+const exportSettings = () => {
+    if (!fs.existsSync(`${process.env.HOME}\\myclasssettings`)) fs.mkdirSync(`${process.env.HOME}\\myclasssettings`);
+    fs.copyFileSync('settings.json', `${process.env.HOME}\\myclasssettings\\myclasssettings.json`);
+    require('child_process').exec(`start "" "${process.env.HOME}\\myclasssettings"`);
+};
