@@ -54,14 +54,14 @@ const showPane = pane => {
 if (!fs.existsSync('settings.json')) {
     fs.writeFileSync('settings.json', JSON.stringify(default_settings));
 
-    document.querySelector('#cog').style.display = 'none';
+    document.querySelector('#cog').innerText = '';
     document.querySelector('#initbutton').style.display = 'block';
     showPane('settings');
 } else { showPane('home'); }
 document.querySelector('#initbutton').onclick = () => {
     savClass();
     savPeriod();
-    showPane('day');
+    showPane('home');
 
     document.querySelector('#initbutton').style.display = 'none';
     document.querySelector('#cog').innerText = 'Settings';
